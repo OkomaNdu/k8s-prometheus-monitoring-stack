@@ -1,0 +1,25 @@
+# Deploy mysql chart, nginx-ingress controller and java application in k8s cluster
+- name: Deploy manifests in k8s cluster
+  hosts: localhost
+  tasks:
+    - name: Deploy nginx ingress controller
+      kubernetes.core.helm:
+        name: ingress-controller
+        release_namespace: ingress
+        create_namespace: true
+        chart_ref: ingress-nginx/ingress-nginx
+        values: "{{ lookup('template', 'kubernetes-manifests/nginx-ingress-chart-values.yaml') | from_yaml }}"
+    - name: Deploy Mysql chart with 2 replicas
+      kubernetes.core.helm:
+        name: mysql-release
+        chart_ref: bitnami/mysql
+        chart_version: 14.0.3
+        release_namespace: default
+        values: "{{ lookup('template', 'kubernetes-manifests/2-mysql-chart-values-lke.yaml') | from_yaml }}"
+    - name: Deploy Java application manifests
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', '{{ item }}') }}"
+        state: present
+        namespace: default
+      with_fileglob:
+        - "kubernetes-manifests/java-*.yaml"

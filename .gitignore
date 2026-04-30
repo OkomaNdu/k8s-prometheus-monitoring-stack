@@ -1,0 +1,29 @@
+# =============================================================
+# Kubernetes Secrets — contain credentials, NEVER commit these
+# =============================================================
+kubernetes-manifests/4-email-secret.yaml
+kubernetes-manifests/4-slack-secret.yaml
+kubernetes-manifests/java-db-secret.yaml
+
+# MySQL Helm chart values contain plaintext passwords
+kubernetes-manifests/1-mysql-chart-values-lke.yaml
+kubernetes-manifests/2-mysql-chart-values-lke.yaml
+
+# Kubeconfig files — contain cluster credentials
+*.kubeconfig
+*kubeconfig*.yaml
+monitoring-kubeconfig.yaml
+
+# =============================================================
+# Java / Gradle build artifacts
+# =============================================================
+Java-app/build/
+Java-app/.gradle/
+*.class
+*.jar
+*.war
+
+# =============================================================
+# Tool-specific configs
+# =============================================================
+.claude/

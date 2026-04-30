@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-release-primary
+  namespace: default
+  labels:
+    app: mysql-release-primary
+spec:
+  serviceName: mysql-release-primary
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-release-primary
+  template:
+    metadata:
+      labels:
+        app: mysql-release-primary
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.4
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_root_pwd
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_name
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_pwd
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: linode-block-storage
+      resources:
+        requests:
+          storage: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-release-primary
+  namespace: default
+  labels:
+    app: mysql-release-primary
+spec:
+  selector:
+    app: mysql-release-primary
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: 3306
+  clusterIP: None

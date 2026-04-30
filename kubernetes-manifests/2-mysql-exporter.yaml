@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-exporter
+  namespace: default
+  labels:
+    app: mysql-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-exporter
+  template:
+    metadata:
+      labels:
+        app: mysql-exporter
+    spec:
+      containers:
+      - name: mysql-exporter
+        image: prom/mysqld-exporter:v0.15.1
+        args:
+        - --mysqld.address=mysql-release-primary:3306
+        - --mysqld.username=root
+        env:
+        - name: MYSQLD_EXPORTER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: db_root_pwd
+        ports:
+        - containerPort: 9104
+          name: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-exporter
+  namespace: default
+  labels:
+    app: mysql-exporter
+spec:
+  selector:
+    app: mysql-exporter
+  ports:
+  - name: metrics
+    port: 9104
+    targetPort: 9104
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mysql-exporter-sm
+  namespace: default
+  labels:
+    release: monitoring-stack
+    app: mysql-exporter
+spec:
+  endpoints:
+  - interval: 20s
+    port: metrics
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app: mysql-exporter
